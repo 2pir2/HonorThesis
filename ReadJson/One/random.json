@@ -1,0 +1,35 @@
+{
+    "name": "John Doe",
+    "age": 29,
+    "email": "johndoe@example.com",
+    "address": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "state": "CA",
+        "zip": "90210"
+    },
+    "phoneNumbers": [
+        {
+            "type": "home",
+            "number": "555-555-5555"
+        },
+        {
+            "type": "mobile",
+            "number": "555-123-4567"
+        }
+    ],
+    "hobbies": ["reading", "gaming", "coding"],
+    "isSubscribed": true,
+    "purchaseHistory": [
+        {
+            "item": "Laptop",
+            "price": 1200.50,
+            "date": "2023-01-15"
+        },
+        {
+            "item": "Smartphone",
+            "price": 699.99,
+            "date": "2023-05-23"
+        }
+    ]
+}
