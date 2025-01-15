@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -19,6 +20,42 @@ type ProveModelCircuit struct {
 	Biases   [2][5]frontend.Variable    `gnark:",private"` // Biases as 2D slices
 	Inputs   [1][5]frontend.Variable    `gnark:",public"`  // Input vectors as a 2D slice
 	Expected [1]frontend.Variable       `gnark:",private"` // Expected outputs as a 1D slice
+}
+
+func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
+	// computes a % r = b
+	// inputs[0] = a -- input
+	// inputs[1] = r -- modulus
+	// outputs[0] = b -- remainder
+	// outputs[1] = (a-b)/r -- quotient
+	if len(outputs) != 2 {
+		return errors.New("expected 2 outputs")
+	}
+	if len(inputs) != 2 {
+		return errors.New("expected 2 inputs")
+	}
+	outputs[1].QuoRem(inputs[0], inputs[1], outputs[0])
+	fmt.Println(outputs[0], outputs[1], inputs[0], inputs[1])
+	return nil
+}
+
+func SmallMod(api frontend.API, a, r frontend.Variable) (quo, rem frontend.Variable) {
+
+	res, err := api.Compiler().NewHint(smallModHint, 2, a, r)
+	if err != nil {
+		panic(err)
+	}
+	rem = res[0]
+	quo = res[1]
+
+	// to prevent against overflows, we assume that the inputs are small relative to the native field
+	nbBits := api.Compiler().Field().BitLen()/2 - 2
+	bound := new(big.Int).Lsh(big.NewInt(1), uint(nbBits))
+	api.AssertIsLessOrEqual(rem, bound)
+	api.AssertIsLessOrEqual(quo, bound)
+
+	api.AssertIsEqual(a, api.Add(api.Mul(quo, r), rem))
+	return quo, rem
 }
 
 func scaleDown(api frontend.API, value frontend.Variable) frontend.Variable {

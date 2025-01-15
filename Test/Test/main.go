@@ -28,7 +28,7 @@ func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
 	return nil
 }
 
-func SmallMod(api frontend.API, a, r, rounded frontend.Variable) (quo, rem frontend.Variable) {
+func SmallMod(api frontend.API, a, r frontend.Variable) (quo, rem frontend.Variable) {
 
 	res, err := api.Compiler().NewHint(smallModHint, 2, a, r)
 	if err != nil {
@@ -54,7 +54,7 @@ type Circuit struct {
 }
 
 func (c *Circuit) Define(api frontend.API) error {
-	quo, rem := SmallMod(api, c.A, c.R, c.round)
+	quo, rem := SmallMod(api, c.A, c.R)
 	api.Println("Original Number", c.A)
 	api.Println("Dividor", c.R)
 	api.Println("Quotient", quo)
@@ -70,11 +70,6 @@ func TestSmallMod(t *testing.T) {
 
 	assert.CheckCircuit(&Circuit{}, test.WithValidAssignment(&Circuit{A: 1234000, R: 1000}))
 
-}
-
-func testInput(api frontend.API, a frontend.Variable) frontend.Variable {
-	b := frontend.Variable(api.Add(a, 3))
-	return b
 }
 
 func main() {
