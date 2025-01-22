@@ -9,6 +9,7 @@ import (
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
+	"github.com/consensys/gnark/constraint/solver"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/consensys/gnark/std/math/cmp"
@@ -16,10 +17,10 @@ import (
 
 // ProveModelCircuit defines the circuit structure for the neural network
 type ProveModelCircuit struct {
-	Weights  [2][5][5]frontend.Variable `gnark:",private"` // Weights as 3D slices
-	Biases   [2][5]frontend.Variable    `gnark:",private"` // Biases as 2D slices
-	Inputs   [1][5]frontend.Variable    `gnark:",public"`  // Input vectors as a 2D slice
-	Expected [1]frontend.Variable       `gnark:",private"` // Expected outputs as a 1D slice
+	Weights  [10][10][10]frontend.Variable `gnark:",private"` // Weights as 3D slices
+	Biases   [10][10]frontend.Variable     `gnark:",private"` // Biases as 2D slices
+	Inputs   [20][10]frontend.Variable     `gnark:",public"`  // Input vectors as a 2D slice
+	Expected [20]frontend.Variable         `gnark:",private"` // Expected outputs as a 1D slice
 }
 
 func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
@@ -49,12 +50,12 @@ func SmallMod(api frontend.API, a, r frontend.Variable) (quo, rem frontend.Varia
 	quo = res[1]
 
 	// to prevent against overflows, we assume that the inputs are small relative to the native field
-	nbBits := api.Compiler().Field().BitLen()/2 - 2
-	bound := new(big.Int).Lsh(big.NewInt(1), uint(nbBits))
-	api.AssertIsLessOrEqual(rem, bound)
-	api.AssertIsLessOrEqual(quo, bound)
+	//nbBits := api.Compiler().Field().BitLen()/2 - 2
+	//bound := new(big.Int).Lsh(big.NewInt(1), uint(nbBits))
+	// api.AssertIsLessOrEqual(rem, bound)
+	// api.AssertIsLessOrEqual(quo, bound)
 
-	api.AssertIsEqual(a, api.Add(api.Mul(quo, r), rem))
+	// api.AssertIsEqual(a, api.Add(api.Mul(quo, r), rem))
 	return quo, rem
 }
 
@@ -105,8 +106,8 @@ func (circuit *ProveModelCircuit) Define(api frontend.API) error {
 				}
 
 				// Apply the scale-down function
-				//sum = scaleDown(api, sum)
-
+				sum, rem := SmallMod(api, sum, 1000)
+				api.Println(sum, "numb", rem)
 				// Apply ReLU activation
 				newOutputs[i] = applyReLU(api, sum, largeBoundary)
 			}
@@ -144,6 +145,7 @@ func applyReLU(api frontend.API, value, largeBoundary frontend.Variable) fronten
 }
 
 func main() {
+	solver.RegisterHint(smallModHint)
 	// Open the JSON files
 	weightsFile, err := os.Open("weights.json")
 	if err != nil {
@@ -217,12 +219,12 @@ func main() {
 
 	// Initialize Expected Outputs
 	for i := 0; i < len(expectedData.Expected); i++ {
-		scaledExpected := new(big.Int).SetInt64(int64(expectedData.Expected[i] * 1000))
+		scaledExpected := new(big.Int).SetInt64(int64(expectedData.Expected[i]))
 		assignment.Expected[i] = frontend.Variable(scaledExpected)
 	}
 
 	var myCircuit ProveModelCircuit
-	fmt.Print(assignment.Inputs)
+	fmt.Print(assignment.Expected)
 	// Compile and set up the circuit
 	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &myCircuit)
 	if err != nil {

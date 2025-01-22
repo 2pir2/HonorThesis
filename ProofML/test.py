@@ -1,4 +1,6 @@
 import json
+import sys
+from io import StringIO
 
 def relu(x):
     """ReLU activation function."""
@@ -47,26 +49,23 @@ def neural_network_scaled(weights, biases, input_vector, max_size, scale=1000):
         layer_outputs_exact[0][i] = biases[0][i]
         for j in range(len(input_vector)):
             tmpAccu = weights[0][i][j] * input_vector[j]
-            print(tmpAccu)
             layer_outputs_exact[0][i] += weights[0][i][j] * input_vector[j]
-            #print(layer_outputs_exact[0][i])
         layer_outputs_exact[0][i] = relu(layer_outputs_exact[0][i])  # ReLU
-        print( )
+
         # Scaled computation
         sum_accumulated = scaled_biases[0][i]
         for j in range(len(scaled_input_vector)):
             tmpRound = scaled_weights[0][i][j] * scaled_input_vector[j]
-            print(tmpRound)
             sum_accumulated += scaled_weights[0][i][j] * scaled_input_vector[j]
-            #print(sum_accumulated)
         rounded = round_and_scale_down(sum_accumulated, scale)
         layer_outputs_scaled[0][i] = relu_bigint(rounded, large_boundary)
+
     print(f"\nLayer 1 Add Comparison:")
-    print( )
+
     # Debug layer 1 comparison
     print(f"\nLayer 1 Outputs Comparison:")
     for i in range(len(layer_outputs_scaled[0])):
-        print(f"Neuron {i}: Scaled = {layer_outputs_scaled[0][i]}, Exact = {layer_outputs_exact[0][i]}")
+        print(f"Neuron {i}: Scaled = {layer_outputs_scaled[0][i]:>8}, Exact = {layer_outputs_exact[0][i]:>12.6f}")
 
     # Subsequent layers computation
     for layer_idx in range(1, len(weights)):
@@ -89,7 +88,7 @@ def neural_network_scaled(weights, biases, input_vector, max_size, scale=1000):
         # Debug subsequent layer comparisons
         print(f"\nLayer {layer_idx + 1} Outputs Comparison:")
         for i in range(len(layer_outputs_scaled[layer_idx])):
-            print(f"Neuron {i}: Scaled = {layer_outputs_scaled[layer_idx][i]}, Exact = {layer_outputs_exact[layer_idx][i]}")
+            print(f"Neuron {i}: Scaled = {layer_outputs_scaled[layer_idx][i]:>8}, Exact = {layer_outputs_exact[layer_idx][i]:>12.6f}")
 
     # Final layer's outputs
     print("\nFinal layer output matrix (scaled values):")
@@ -101,19 +100,24 @@ def neural_network_scaled(weights, biases, input_vector, max_size, scale=1000):
 
     return max_idx
 
+# Capture printed output
+output_buffer = StringIO()
+original_stdout = sys.stdout
+sys.stdout = output_buffer
+
 # Load JSON files
-with open(r"/Users/hanxu/Desktop/ZK-Snark/Try/ProofML/weights.json", "r") as weights_file:
+with open(r"/Users/hanxu/Desktop/AndyHonorThesis/ProofML/weights.json", "r") as weights_file:
     weights_data = json.load(weights_file)
 
 weights = weights_data["weights"]
 biases = weights_data["biases"]
 
-with open("inputs.json", "r") as inputs_file:
+with open(r"/Users/hanxu/Desktop/AndyHonorThesis/ProofML/inputs.json", "r") as inputs_file:
     inputs_data = json.load(inputs_file)
 
 input_vectors = inputs_data["inputs"]
 
-with open("outputs.json", "r") as outputs_file:
+with open(r"/Users/hanxu/Desktop/AndyHonorThesis/ProofML/outputs.json", "r") as outputs_file:
     outputs_data = json.load(outputs_file)
 
 expected_outputs = outputs_data["outputs"]
@@ -130,3 +134,16 @@ for input_index, input_vector in enumerate(input_vectors):
         print("✅ Match")
     else:
         print("❌ Mismatch")
+
+# Save output to a JSON file
+sys.stdout = original_stdout
+output_text = output_buffer.getvalue()
+
+# Write output manually line by line
+output_lines = output_text.split("\n")
+formatted_output = {"output": output_lines}
+
+with open(r"/Users/hanxu/Desktop/AndyHonorThesis/ProofML/simulation_output.json", "w") as json_file:
+    json.dump(formatted_output, json_file, indent=4)
+
+print("Simulation results saved to simulation_output.json")

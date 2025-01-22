@@ -56,9 +56,9 @@ type Circuit struct {
 }
 
 func (c *Circuit) Define(api frontend.API) error {
-	c.A = 232
+	c.A = 232213
 	c.R = 12
-	quo, rem := SmallMod(api, c.A, c.R)
+	quo, rem := SmallMod(api, c.A, 1000)
 	api.Println("Original Number", c.A)
 	api.Println("Dividor", c.R)
 	api.Println("Quotient", quo)
