@@ -1,107 +1,59 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/big"
-
-	"github.com/consensys/gnark-crypto/ecc"
-	"github.com/consensys/gnark/backend/groth16"
-	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 )
 
-type RandomNumberCircuit struct {
-	Seed frontend.Variable `gnark:",public"` // Public input: Seed
-}
-
-func (circuit *RandomNumberCircuit) Define(api frontend.API) error {
-	// Declare constants as frontend.Variable
-	a := frontend.Variable(1664525)    // Multiplier
-	c := frontend.Variable(1013904223) // Increment
-	m := frontend.Variable(1 << 32)    // Modulus (2^32)	
-
-	temp := api.Add(api.Mul(a, circuit.Seed), c)
-
-	quotient := api.Div(temp, m)
-	modulusResult := api.Sub(temp, api.Mul(quotient, m))
-
-	api.AssertIsEqual(frontend.Variable(0), modulusResult)
-
+// Define the hint function for modular arithmetic
+func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
+	// Computes a % r = b
+	// inputs[0] = a -- input
+	// inputs[1] = r -- modulus
+	// outputs[0] = b -- remainder
+	// outputs[1] = (a-b)/r -- quotient
+	if len(outputs) != 2 {
+		return errors.New("expected 2 outputs")
+	}
+	if len(inputs) != 2 {
+		return errors.New("expected 2 inputs")
+	}
+	outputs[1].QuoRem(inputs[0], inputs[1], outputs[0])
 	return nil
 }
 
-func main() {
-	// Step 1: Read the seed from a JSON file
-	type SeedData struct {
-		Seed int64 `json:"seed"`
-	}
-	data, err := ioutil.ReadFile("seed.json")
+// SmallMod uses the smallModHint to compute the quotient and remainder
+func SmallMod(a, r *big.Int) (quo, rem *big.Int) {
+	// Initialize output variables
+	rem = new(big.Int)
+	quo = new(big.Int)
+
+	// Use the hint function to compute modular division
+	err := smallModHint(nil, []*big.Int{a, r}, []*big.Int{rem, quo})
 	if err != nil {
-		log.Fatalf("Failed to read seed file: %v", err)
-	}
-	var seedData SeedData
-	if err := json.Unmarshal(data, &seedData); err != nil {
-		log.Fatalf("Failed to parse seed JSON: %v", err)
+		panic(fmt.Sprintf("Error in modular computation: %v", err))
 	}
 
-	// Input values for the circuit
-	seed := big.NewInt(seedData.Seed)         // Read seed from JSON
-	expectedSeed := big.NewInt(seedData.Seed) // Expected seed (same as input for verification)
+	return quo, rem
+}
 
+func main() {
 	// Linear Congruential Generator (LCG) constants
 	a := big.NewInt(1664525)    // Multiplier
 	c := big.NewInt(1013904223) // Increment
-	m := big.NewInt(1 << 32)    // Modulus (2^32)
+	m := big.NewInt(100)        // Modulus (2^32)
+	seed := big.NewInt(12345)   // Example seed
 
-	// Compute the expected generated number using the same formula
-	generated := new(big.Int).Add(new(big.Int).Mul(seed, a), c)
-	generated.Mod(generated, m)
+	// Step 1: Compute the intermediate result temp = a * seed + c
+	temp := new(big.Int).Add(new(big.Int).Mul(seed, a), c)
 
-	// Step 2: Define the circuit and the assignment
-	var myCircuit RandomNumberCircuit
-	assignment := &RandomNumberCircuit{
-		Seed:      seed,	
-	}
+	// Step 2: Use SmallMod to compute the quotient and remainder
+	quo, rem := SmallMod(temp, m)
 
-	// Compile the circuit
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &myCircuit)
-	if err != nil {
-		log.Fatalf("Failed to compile circuit: %v", err)
-	}
-
-	// Create a witness
-	witness, err := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
-	if err != nil {
-		log.Fatalf("Failed to create witness: %v", err)
-	}
-
-	// Step 3: Setup
-	pk, vk, err := groth16.Setup(cs)
-	if err != nil {
-		log.Fatalf("Setup failed: %v", err)
-	}
-
-	// Step 4: Prove
-	proof, errproof := groth16.Prove(cs, pk, witness)
-	fmt.Println("Error Proving: ", errproof)
-
-	// Generate the public witness
-	publicWitness, err := witness.Public()
-	if err != nil {
-		log.Fatalf("Failed to generate public witness: %v", err)
-	}
-
-	// Step 5: Verify
-	errverify := groth16.Verify(proof, vk, publicWitness)
-	fmt.Println("Error Verifying: ", errverify)
-
-	// Final Verification Check
-	if errverify == nil && errproof == nil {
-		fmt.Println("Verification Succeeded!")
-	} else {
-		fmt.Println("Verification Failed!")
-	}
+	// Step 3: Print the results
+	fmt.Println("Seed:", seed)
+	fmt.Println("Temp:", temp)
+	fmt.Println("Quotient:", quo)
+	fmt.Println("Remainder:", rem)
 }

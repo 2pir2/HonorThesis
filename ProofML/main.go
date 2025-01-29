@@ -15,12 +15,19 @@ import (
 	"github.com/consensys/gnark/std/math/cmp"
 )
 
+const (
+	pubInputFile = "public.json"
+	priInputFile = "private.json"
+	vkKeyFile    = "vk.g16vk"
+	proofFile    = "proof.g16p"
+)
+
 // ProveModelCircuit defines the circuit structure for the neural network
 type ProveModelCircuit struct {
-	Weights  [10][10][10]frontend.Variable `gnark:",private"` // Weights as 3D slices
-	Biases   [10][10]frontend.Variable     `gnark:",private"` // Biases as 2D slices
-	Inputs   [20][10]frontend.Variable     `gnark:",public"`  // Input vectors as a 2D slice
-	Expected [20]frontend.Variable         `gnark:",private"` // Expected outputs as a 1D slice
+	Weights  [8][10][10]frontend.Variable `gnark:",private"` // Weights as 3D slices
+	Biases   [8][10]frontend.Variable     `gnark:",private"` // Biases as 2D slices
+	Inputs   [10][10]frontend.Variable    `gnark:",public"`  // Input vectors as a 2D slice
+	Expected [10]frontend.Variable        `gnark:",private"` // Expected outputs as a 1D slice
 }
 
 func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
@@ -218,13 +225,14 @@ func main() {
 	}
 
 	// Initialize Expected Outputs
+
 	for i := 0; i < len(expectedData.Expected); i++ {
 		scaledExpected := new(big.Int).SetInt64(int64(expectedData.Expected[i]))
 		assignment.Expected[i] = frontend.Variable(scaledExpected)
 	}
 
 	var myCircuit ProveModelCircuit
-	fmt.Print(assignment.Expected)
+	fmt.Print(assignment)
 	// Compile and set up the circuit
 	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &myCircuit)
 	if err != nil {
@@ -250,6 +258,20 @@ func main() {
 		return
 	}
 
+	vkF, _ := os.Create(vkKeyFile)
+
+	defer vkF.Close()
+
+	_, _ = vk.WriteTo(vkF)
+
+	// Write the proof to a file
+	proofF, _ := os.Create(proofFile)
+
+	defer proofF.Close()
+
+	_, _ = proof.WriteTo(proofF)
+
+	fmt.Println("Proof and verification key files have been successfully generated.")
 	publicWitness, err := witness.Public()
 	if err != nil {
 		fmt.Println("Error getting public witness:", err)
