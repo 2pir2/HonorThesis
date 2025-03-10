@@ -60,12 +60,7 @@ def neural_network_scaled(weights, biases, input_vector, max_size, scale=1000):
         rounded = round_and_scale_down(sum_accumulated, scale)
         layer_outputs_scaled[0][i] = relu_bigint(rounded, large_boundary)
 
-    print(f"\nLayer 1 Add Comparison:")
-
-    # Debug layer 1 comparison
-    print(f"\nLayer 1 Outputs Comparison:")
-    for i in range(len(layer_outputs_scaled[0])):
-        print(f"Neuron {i}: Scaled = {layer_outputs_scaled[0][i]:>8}, Exact = {layer_outputs_exact[0][i]:>12.6f}")
+    
 
     # Subsequent layers computation
     for layer_idx in range(1, len(weights)):
@@ -86,14 +81,10 @@ def neural_network_scaled(weights, biases, input_vector, max_size, scale=1000):
             layer_outputs_scaled[layer_idx][i] = relu_bigint(rounded, large_boundary)
 
         # Debug subsequent layer comparisons
-        print(f"\nLayer {layer_idx + 1} Outputs Comparison:")
-        for i in range(len(layer_outputs_scaled[layer_idx])):
-            print(f"Neuron {i}: Scaled = {layer_outputs_scaled[layer_idx][i]:>8}, Exact = {layer_outputs_exact[layer_idx][i]:>12.6f}")
+        
 
     # Final layer's outputs
-    print("\nFinal layer output matrix (scaled values):")
-    for i, output in enumerate(layer_outputs_scaled[len(weights) - 1]):
-        print(f"Neuron {i} output: {output}")
+    
 
     # Find the maximum value (argmax) in the final layer output
     max_idx = layer_outputs_scaled[len(weights) - 1].index(max(layer_outputs_scaled[len(weights) - 1]))
@@ -124,7 +115,7 @@ expected_outputs = outputs_data["outputs"]
 
 # Simulate and validate
 for input_index, input_vector in enumerate(input_vectors):
-    print(f"\nSimulating for Input {input_index + 1}: {input_vector}")
+    
     predicted_output = neural_network_scaled(weights, biases, input_vector, len(weights[0][0]))
 
     # Compare predicted and expected outputs

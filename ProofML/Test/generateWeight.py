@@ -72,9 +72,9 @@ def generate_data(layers, neurons_per_layer, num_inputs, output_prefix):
 # Define configurations for different sizes
 sizes = [
     (2, 10, 10),   # (layers, neurons per layer, number of inputs)
-    (4, 10, 10),   # (layers, neurons per layer, number of inputs)
-    (6, 10, 10),   # (layers, neurons per layer, number of inputs)
-    (8, 10, 10)    # (layers, neurons per layer, number of inputs)
+    # (4, 10, 10),   # (layers, neurons per layer, number of inputs)
+    # (6, 10, 10),   # (layers, neurons per layer, number of inputs)
+    # (8, 10, 10)    # (layers, neurons per layer, number of inputs)
 ]
 
 # Generate data for each configuration

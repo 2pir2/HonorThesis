@@ -26,9 +26,9 @@ const (
 // ProveModelCircuit defines the circuit structure for the neural network
 type ProveModelCircuit struct {
 	Weights  [2][3][3]frontend.Variable `gnark:",private"` // Weights as 3D slices
-	Biases   [2][3]frontend.Variable     `gnark:",private"` // Biases as 2D slices
-	Inputs   [1][3]frontend.Variable    `gnark:",public"`  // Input vectors as a 2D slice
-	Expected [1]frontend.Variable        `gnark:",private"` // Expected outputs as a 1D slice
+	Biases   [2][3]frontend.Variable    `gnark:",private"` // Biases as 2D slices
+	Inputs   [10][3]frontend.Variable   `gnark:",public"`  // Input vectors as a 2D slice
+	Expected [10]frontend.Variable      `gnark:",private"` // Expected outputs as a 1D slice
 }
 
 func smallModHint(mod *big.Int, inputs []*big.Int, outputs []*big.Int) error {
@@ -166,14 +166,14 @@ func main() {
 	}
 	defer weightsFile.Close()
 
-	inputsFile, err := os.Open("inputs.json")
+	inputsFile, err := os.Open("otherinputs.json")
 	if err != nil {
 		fmt.Println("Error opening inputs file:", err)
 		return
 	}
 	defer inputsFile.Close()
 
-	outputsFile, err := os.Open("outputs.json")
+	outputsFile, err := os.Open("Otheroutputs.json")
 	if err != nil {
 		fmt.Println("Error opening outputs file:", err)
 		return

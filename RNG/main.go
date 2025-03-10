@@ -53,7 +53,7 @@ func main() {
 
 	// Step 3: Print the results
 	fmt.Println("Seed:", seed)
-	fmt.Println("Temp:", temp)
+	fmt.Println("Temp:", temp) 
 	fmt.Println("Quotient:", quo)
 	fmt.Println("Remainder:", rem)
 }
