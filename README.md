@@ -1,7 +1,9 @@
 # Zero Knowledge Verification of Machine Learning Robustness
 ## Code Installation
 In order to run the file. Please install the Golang.
+
 After that, navigate to ProofMLf folder, run the command: go mod tidy
+
 Finally, run the command go run main.go 
 
 ## Introcution
