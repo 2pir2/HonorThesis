@@ -1,6 +1,8 @@
 # Zero Knowledge Verification of Machine Learning Robustness
 ## Code Installation
-
+In order to run the file. Please install the Golang.
+After that, navigate to ProofMLf folder, run the command: go mod tidy
+Finally, run the command go run main.go 
 
 ## Introcution
 This GitHub Repo contains the code for verify the robustness of a neural network. Each folder contains relevant code with this project. Below is the introduction for each folder in order appeared in the repo.
