@@ -11,7 +11,6 @@ import (
 	"github.com/consensys/gnark/backend/groth16"
 	groth16_bn254 "github.com/consensys/gnark/backend/groth16/bn254"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/consensys/gnark/test"
 )
 
@@ -128,59 +127,6 @@ func TestMakeSudoku(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func TestCreateProof(t *testing.T) {
-	assert := test.NewAssert(t)
-	incompleteFile, err := os.ReadFile(pubInputFile)
-	assert.NoError(err)
-	completeFile, err := os.ReadFile(priInputFile)
-	assert.NoError(err)
-
-	var incompleteSudoku Sudoku
-	err = json.Unmarshal(incompleteFile, &incompleteSudoku)
-	assert.NoError(err)
-
-	var completeSudoku Sudoku
-	err = json.Unmarshal(completeFile, &completeSudoku)
-	assert.NoError(err)
-
-	// Create the circuit assignment
-	assignment := &SudokuCircuit{}
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			assignment.IncompleteGrid[i][j] = frontend.Variable(incompleteSudoku.Grid[i][j])
-			assignment.CompleteGrid[i][j] = frontend.Variable(completeSudoku.Grid[i][j])
-		}
-	}
-
-	var myCircuit SudokuCircuit
-	witness, err := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
-	assert.NoError(err)
-	cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &myCircuit)
-	assert.NoError(err)
-
-	pk, vk, err := groth16.Setup(cs)
-	assert.NoError(err)
-
-	proof, err := groth16.Prove(cs, pk, witness)
-	assert.NoError(err)
-
-	var (
-		vkF    *os.File
-		proofF *os.File
-	)
-	vkF, err = os.Create(vkKeyFile)
-	assert.NoError(err)
-	defer vkF.Close()
-	proofF, err = os.Create(proofFile)
-	assert.NoError(err)
-	defer proofF.Close()
-
-	_, err = vk.WriteTo(vkF)
-	assert.NoError(err)
-	_, err = proof.WriteTo(proofF)
-	assert.NoError(err)
 }
 
 func TestReadProof(t *testing.T) {

@@ -1,4 +1,4 @@
 {
-    "initialPoint" : [1,2,3,4],
-    "boundry":0.5
+    "initialPoint" :  [-0.13, 0.06, 0.16],
+    "boundry":0.1
 }

@@ -43,6 +43,10 @@ func SmallMod(api frontend.API, a, r frontend.Variable) (quo, rem frontend.Varia
 	// to prevent against overflows, we assume that the inputs are small relative to the native field
 	nbBits := api.Compiler().Field().BitLen()/2 - 2
 	bound := new(big.Int).Lsh(big.NewInt(1), uint(nbBits))
+
+	fmt.Println("Original Number:", 4)
+	fmt.Println("Field ELement Representation:", frontend.Variable(4))
+
 	api.AssertIsLessOrEqual(rem, bound)
 	api.AssertIsLessOrEqual(quo, bound)
 

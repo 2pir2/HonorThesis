@@ -12,14 +12,14 @@ import (
 
 // Struct to represent the data in initialPoint.json
 type InitialData struct {
-	InitialPoint [4]float64 `json:"initialPoint"`
+	InitialPoint [3]float64 `json:"initialPoint"`
 	Boundry      float64    `json:"boundry"`
 }
 
 // Function to calculate Euclidean distance between two 4D points
-func euclideanDistance(p1, p2 [4]float64) float64 {
+func euclideanDistance(p1, p2 [3]float64) float64 {
 	sum := 0.0
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 3; i++ {
 		sum += (p1[i] - p2[i]) * (p1[i] - p2[i])
 	}
 	return math.Sqrt(sum)
@@ -43,14 +43,14 @@ func secureRandomFloat64(min, max float64) (float64, error) {
 }
 
 // Function to generate a random point within a max distance from the reference point
-func generatePointWithinDistance(referencePoint [4]float64, maxDistance float64) ([4]float64, error) {
-	var newPoint [4]float64
+func generatePointWithinDistance(referencePoint [3]float64, maxDistance float64) ([3]float64, error) {
+	var newPoint [3]float64
 	for {
 		// Generate random values by adding small perturbations to each component of the reference point
-		for i := 0; i < 4; i++ {
+		for i := 0; i < 3; i++ {
 			perturbation, err := secureRandomFloat64(-maxDistance, maxDistance)
 			if err != nil {
-				return [4]float64{}, err
+				return [3]float64{}, err
 			}
 			newPoint[i] = referencePoint[i] + perturbation
 		}
@@ -60,7 +60,7 @@ func generatePointWithinDistance(referencePoint [4]float64, maxDistance float64)
 
 		// If the distance is within the limit, round each component to 2 decimal places and return the point
 		if distance <= maxDistance {
-			for i := 0; i < 4; i++ {
+			for i := 0; i < 3; i++ {
 				newPoint[i] = math.Round(newPoint[i]*100) / 100 // Round to 2 decimal places
 			}
 			break
@@ -90,8 +90,8 @@ func main() {
 	maxDistance := initialData.Boundry
 
 	// Step 4: Generate 50 random points based on the data from the file
-	numPoints := 50
-	generatedPoints := make([][4]float64, numPoints)
+	numPoints := 10
+	generatedPoints := make([][3]float64, numPoints)
 	for i := 0; i < numPoints; i++ {
 		point, err := generatePointWithinDistance(referencePoint, maxDistance)
 		if err != nil {
@@ -129,5 +129,5 @@ func main() {
 		return
 	}
 
-	fmt.Println("Generated 50 random points and saved them to inputs.json")
+	fmt.Println("Generated 10 random points and saved them to inputs.json")
 }
